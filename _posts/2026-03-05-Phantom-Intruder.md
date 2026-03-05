@@ -16,7 +16,7 @@ Full Documentasi cara menulis bisa dilihat di https://chirpy.cotes.page/posts/wr
 
 # Phantom Intruder
 
-![alt text](/content/img/phantomintruder/1.png)
+![alt text](1.png)
 
 ## Deskripsi Soal
 

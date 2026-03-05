@@ -7,6 +7,7 @@ tags: [CTF,Forensic,Bootcamp,logs]
 toc: true
 comments: false
 description: Event Viewing By PicoCTF
+media_subpath: /content/img/eventviewing
 ---
 <!-- Masukkan Image Atau Vid Ke /content
 Untuk memanggil bisa ![Coba Image](/content/img/berdua.jpeg) _foto Beduaa_ 
@@ -15,7 +16,7 @@ Full Documentasi cara menulis bisa dilihat di https://chirpy.cotes.page/posts/wr
 
 # Event Viewing 
 
-![alt text](/content/img/eventviewing/1.png)
+![alt text](1.png)
 
 ## Deskripsi Soal
 
@@ -29,7 +30,8 @@ See if you can find evidence for the each of these events and retrieve the flag 
 
 ## Tahap Pengerjaan
 Buka File yang sudah di unduh tadi menggunakan event viewer 
-![alt text](/content/img/eventviewing/2.png)
+
+![alt text](2.png)
 
 Jika kita membaca deskripsi soal, Flag terpisah menjadi 3 bagian
 
@@ -42,24 +44,24 @@ Jika kita membaca deskripsi soal, Flag terpisah menjadi 3 bagian
 Disini Kita harus mencari Log dimana penyerang menginstall sebuah software yang baru di unduh
 
 Kita bisa menggunakan filter log untuk mempermudah pencaharian
-![alt text](/content/img/eventviewing/3.png)
+![alt text](3.png)
 
 Kita masukkan Event ID 1033
-![alt text](/content/img/eventviewing/4.png)
+![alt text](4.png)
 
 > Kode 1033 (MsiInstaller) Menandakan bahwa Windows Installer menginstal/mengonfigurasi ulang/memperbarui aplikasi.
 
 Setelah di filter, kita bisa cek log yang menggunakan event id yang sesuai dan cari kejanggalan di logs tersebut
 
-![alt text](/content/img/eventviewing/5.png)
+![alt text](5.png)
 
 Disini terdapat kejanggalan pada logs yang dimana terdapat kode base64 di logs tersebut
 
-![alt text](/content/img/eventviewing/6.png)
+![alt text](6.png)
 
 kita bisa decode kode base64 tersebut menggunakan online tools, Disini saya menggunakan tools [CyberChef](https://gchq.github.io/CyberChef/)
 
-![alt text](/content/img/eventviewing/7.png)
+![alt text](7.png)
 
 Flag Bagian 1 : picoCTF{Ev3nt_vi3wv3r_
 
@@ -74,17 +76,17 @@ Di soal mengatakan bahwa setelah dia menjalankan software nya, tidak ada perubah
 
 Sama seperti sebelumnya kita menggunakan log filter bawaan dari event Viewer
 
-![alt text](/content/img/eventviewing/8.png)
+![alt text](8.png)
 
 > Kode Event ID 4657 adalah log keamanan (security log) di Windows yang menandakan bahwa sebuah nilai registri (registry value) telah diubah, dibuat, atau dihapus
 
 Dan lagi lagi, Di salah satu log terdapat Kode base64 
 
-![alt text](/content/img/eventviewing/9.png)
+![alt text](9.png)
 
 Dan kita coba decode kode tersebut
 
-![alt text](/content/img/eventviewing/10.png)
+![alt text](10.png)
 
 Flag Bagian 2 : 1s_a_pr3tty_us3ful_
 
@@ -98,17 +100,17 @@ Flag Bagian 2 : 1s_a_pr3tty_us3ful_
 
 Selanjutnya, Ketika User Boot Up dan Login ke computernya, Command prompt tampil dan tertutup dengan sangat cepat, Untuk itu kita harus mencari event ID yang menunjukan inisiasi shutdown program tertentu
 
-![alt text](/content/img/eventviewing/11.png)
+![alt text](11.png)
 
 > Kode Event ID 1074 di Windows adalah log peristiwa yang mencatat tindakan pematian (shutdown) atau menghidupkan ulang (restart) sistem secara terencana, baik oleh pengguna maupun aplikasi
 
 Dan Yap, Pola yang sama dimana di salah satu logs terdapat kode base64
 
-![alt text](/content/img/eventviewing/12.png)
+![alt text](12.png)
 
 Dan kita coba decode kode tersebut 
 
-![alt text](/content/img/eventviewing/13.png)
+![alt text](13.png)
 
 Flag Bagian 3 : t00l_81ba3fe9}
 
