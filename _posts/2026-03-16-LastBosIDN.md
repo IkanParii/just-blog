@@ -123,7 +123,8 @@ Identifikasi nama file yang terkait dengan aktivitas File Inclusion.
 
 Di Log ini Attacker mencoba untuk mengakses /etc/passwd melalui kerentanan LFI
 
-> LFI (Local File Inclusion) adalah kerentanan ketika aplikasi web mengizinkan user menentukan file yang akan di-load dari server lokal.{: .prompt-info }
+LFI (Local File Inclusion) adalah kerentanan ketika aplikasi web mengizinkan user menentukan file yang akan di-load dari server lokal.
+{: .prompt-info }
 
 ![alt text](6.png)
 
