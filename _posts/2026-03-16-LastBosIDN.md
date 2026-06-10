@@ -26,15 +26,15 @@ Periksa dan identifikasi nama agent yang terhubung dengan SIEM yang dideploy sec
 #### Penjelasan
 Setelah kita setting wazuh dan berhasil login kedalam Wazuh Dashboard Maka akan muncul tampilan home dari Wazuh Dashboard
 
-![Screenshot 1](1.png) _Tampilan Home Wazuh Dashboard_
+![alt text](1.png) _Tampilan Home Wazuh Dashboard_
 
 Setelahnya kita Pilih Option Wazuh Agent Untuk melihat Nama agent yang terdaftar di SIEM
 
-![Screenshot 2](2.png)
+![alt text](2.png)
 
 Di Bagian menu Agent Terdapat keterangan agent yang terhubung ke SIEM, Dan disini agent yang terhubung adalah metasploitable
 
-![Screenshot 3](3.png)
+![alt text](3.png)
 
 #### Jawaban
 Metasploitable
@@ -45,11 +45,11 @@ Identifikasi nama web server yang digunakan atau terhubung dengan SIEM lokal.
 #### Penjelasan
 Disini kita akan mencari nama web server apa yang digunakan agent metasploitable, di soal sebelumnya terdapat agent id yang dimana kita bisa gunakan di wazuh Discover sebagai filter
 
-![Screenshot 4](17.png)
+![alt text](17.png)
 
 Jika kita membuka salah satu lognya, terdapat filter Location yang dimana field location digunakan untuk menunjukkan dari file log mana event tersebut berasal di agent
 
-![Screenshot 5](18.png)
+![alt text](18.png)
 
 Di log tersebut terdapat kalimat
 ```
@@ -67,7 +67,7 @@ Sebutkan nama index di Wazuh yang digunakan untuk menyimpan semua log mentah (RA
 
 #### Penjelasan
 
-![Screenshot 6](16.png)
+![alt text](16.png)
 
 Wazuh Archives adalah tempat penyimpanan semua log mentah (raw logs) yang dikirim oleh agent sebelum dianalisis atau diproses menjadi alert.
 
@@ -83,11 +83,11 @@ Periksa jumlah total aktivitas SQL Injection (SQLI) yang terdeteksi selama menye
 
 Untuk mempermudah pencaharian kerentanan pada SQLI, kita bisa menggunakan filter data.url di wazuh dan memasukkan data.url yang berkaitan dengan SQLI 
 
-![Screenshot 7](11.png)
+![alt text](11.png)
 
 Dan Hasilnya terdapat 5 Aktivitas SQLI yang terdeteksi
 
-![Screenshot 8](12.png)
+![alt text](12.png)
 #### Jawaban
 
 5 Aktivitas SQLI
@@ -100,13 +100,13 @@ Identifikasi HTTP status code yang terkait dengan aktivitas Cross-Site Scripting
 
 Sama Seperti soal sebelumnya, kita akan memfilter kerentanan XSS di Wazuh
 
-![Screenshot 9](13.png)_Penerapan Filter XSS_
+![alt text](13.png)_Penerapan Filter XSS_
 
-![Screenshot 10](14.png)_Hasil Filter_
+![alt text](14.png)_Hasil Filter_
 
 Jika di lihat terdapat 3 Log yang terkait dengan XSS, Namun Hanya ada 1 Log yang menampilkan HTTP Status Code 200 yang menandakan XSS berhasil di jalankan
 
-![Screenshot 11](15.png)
+![alt text](15.png)
 
 #### Jawaban
 
@@ -122,7 +122,7 @@ Di Log ini Attacker mencoba untuk mengakses /etc/passwd melalui kerentanan LFI
 
 > LFI (Local File Inclusion) adalah kerentanan ketika aplikasi web mengizinkan user menentukan file yang akan di-load dari server lokal.
 
-![Screenshot 12](6.png)
+![alt text](6.png)
 
 >file /etc/passwd adalah file sistem yang menyimpan informasi dasar semua user yang ada di sistem
 
@@ -142,13 +142,13 @@ Untuk mencari Kerentanan RFI. Hal pertama yang kita lakukan adalah identifikasi 
 http.request.method
 ```
 
-![Screenshot 13](7.png)
+![alt text](7.png)
 
 Yang Selanjutnya kita cari metode POST yang dimana Metode POST Digunakan untuk mengirim data ke server.
 
 Dan Kita analisa File yang dikirimkan ke dalam server
 
-![Screenshot 14](8.png)
+![alt text](8.png)
 
 Jika kita Lihat attacker, mencoba berkomunikasi menggunakan IP 192.168.117.242 dengan Port 9001
 
@@ -157,11 +157,11 @@ Untuk memvalidasi hal tersebut kita bisa memfilter kembali dengan filter
 ```
 tcp.port == 9001
 ```
-![Screenshot 15](9.png)
+![alt text](9.png)
 
 Dan Follow TCP Streamnya
 
-![Screenshot 16](10.png)
+![alt text](10.png)
 
 #### Jawaban
 
@@ -179,7 +179,7 @@ Dari Soal tersebut kita harus mencari Source Port yang terhubung dengan destinat
 tcp.dstport == 4444
 ```
 
-![Screenshot 17](5.png)
+![alt text](5.png)
 
 Dan yap dari log tersebut terlihat Source port yang terhubung adalah 49816
 
@@ -197,7 +197,7 @@ Untuk membuka Memory Dump, disini saya menggunakan Tools Volatility3 dengan tamb
 
 Plugin ini membaca struktur EPROCESS di kernel Windows untuk mendapatkan proses yang sedang berjalan.
 
-![Screenshot 18](19.png)
+![alt text](19.png)
 
 | Kolom Penting | Penjelasan |
 | -------- | -------- |
@@ -217,7 +217,7 @@ Tentukan URL yang terkait dengan aktivitas Local File Inclusion (LFI) yang terde
 
 Untuk melihat aktivitas Local File Inclusion Disini saya menerapkan filter Agent.id dan juga Data.protocol untuk mempermudah pencarian
 
-![Screenshot 19](4.png)
+![alt text](4.png)
 
 Melalui Log tersebut Attacker menggunakan serangan LFI, dengan indikasi payload ../../../etc/passwd yang dimana attacker mencoba menjelajah file di dalam server
 

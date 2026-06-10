@@ -12,7 +12,7 @@ media_subpath: /content/img/phantomintruder
 
 # Phantom Intruder
 
-![Screenshot 1](1.png)
+![alt text](1.png)
 
 ## Deskripsi Soal
 
@@ -24,30 +24,30 @@ Find the PCAP file here Network Traffic PCAP file and try to get the flag.
 
 Setelah Mendownload File tersebut, Kita akan analisis menggunakan tools Wireshark
 
-![Screenshot 2](2.png)
+![alt text](2.png)
 
 Disini kita akan coba membuka salah satu packetnya
 
-![Screenshot 3](3.png)
+![alt text](3.png)
 
 Dan Yap terdapat string aneh di packetnya, Disini saya menduga bahwa ini merupakan encode base64 di karenakan ada (==) di akhir kalimat
 
 Selanjutnya kita akan coba decode kode tersebut menggunakan Online tools [CyberChef](https://gchq.github.io/CyberChef/)
 
-![Screenshot 4](4.png)
+![alt text](4.png)
 
 Dan yap, Kode tersebut merupakan kode base64 dan kita mendapatkan potongan flagnya
 
 Untuk mempercepat pengerjaan kita akan menggunakan command strings di Linux agar mengekstrak kalimat yang bisa di baca user dari file PCAP
 
-![Screenshot 5](5.png)
+![alt text](5.png)
 
 Selanjutnya kita bisa decode semua strings tersebut yang berakhiran (==) 
 
-![Screenshot 6](6.png)
+![alt text](6.png)
 _Sebelum Di decode_
 
-![Screenshot 7](7.png)
+![alt text](7.png)
 _Sesudah di decode_
 
 Selanjutnya kita akan Menyusun kalimat tersebut supaya menjadi flag yang utuh 

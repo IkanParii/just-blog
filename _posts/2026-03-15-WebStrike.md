@@ -12,7 +12,7 @@ media_subpath: /content/img/webstrike
 
 # Webstrike
 
-![Screenshot 1](1.png)
+![alt text](1.png)
 
 ## Deskripsi Soal
 
@@ -27,9 +27,9 @@ Identifying the geographical origin of the attack facilitates the implementation
 
 Setelah saya buka file PCAP nya disini terdapat IP yang mencoba untuk saling berkomunikasi Three Ways Handshake, IP yang pertama kali Request Syn adalah 117.11.88.124, Untuk mencari IP Geolocation kita bisa menggunakan beberapa website seperti https://ipgeolocation.io/ 
 
-![Screenshot 2](2.png) _Network Logs_
+![alt text](2.png) _Network Logs_
 
-![Screenshot 3](3.png) _IP Geolocation_
+![alt text](3.png) _IP Geolocation_
 
 #### Jawaban 
 
@@ -44,10 +44,10 @@ Knowing the attacker's User-Agent assists in creating robust filtering rules. Wh
 Untuk mengetahui User Agent dari perangkat kita harus membuka packet yang berprotokol HTTP atau HTTPS, User Agent sendiri adalah sebuah string teks (karakter) yang dikirimkan oleh browser atau aplikasi ke server web dalam setiap permintaan HTTP, Fungsinya untuk mengidentifikasi perangkat lunak, versi browser dan sistem operasi pengguna
 
 Untuk itu kita bisa pilih packet yang berprotokol http di wireshark
-![Screenshot 4](4.png)
+![alt text](4.png)
 
 Selanjutnya kita bisa follow packet tersebut untuk melihat komunikasinya lebih detail
-![Screenshot 5](5.png)
+![alt text](5.png)
 #### Jawaban 
 
 Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
@@ -61,11 +61,11 @@ We need to determine if any vulnerabilities were exploited. What is the name of 
 Untuk mencari webshell yang berhasil terupload ke server, Kita bisa analisa Packet yang berprotokol HTTP sama seperti soal sebelumnya. Namun, untuk mempermudah mana yang berhasil, kita bisa mencari packet yang bermethod POST, Method POST digunakan untuk mengirimkan data secara tersembunyi melalui permintaan HTTP.
 
 Di Wireshark, kita bisa memfilter packet dengan command http.request.method
-![Screenshot 6](6.png)
+![alt text](6.png)
 
 Jika di lihat, terdapat 2 method POST, Namun memiliki respon server yang berbeda,Dikarenakan method pertama di tolak dikarenakan berekstensi .php namun method kedua, Webshell berhasil terupload ke server dikarenakan di samarkan menggunakan extension jpg atau image
 
-![Screenshot 7](7.png)
+![alt text](7.png)
 
 #### Jawaban
 Image.jpg.php
@@ -78,7 +78,7 @@ Identifying the directory where uploaded files are stored is crucial for locatin
 
 Setelah Menaruh WebShell, Penyerang harus membuka webshell yang sudah terupload di server, Oleh karena itu, penyerang harus mencari direktori tempat file tersebut di upload, setelah mencari direktorinya di dapat bahwa File tersebut masuk ke direktori /reviews/uploads/image.jpg.php
 
-![Screenshot 8](8.png)
+![alt text](8.png)
 
 #### Jawaban 
 /reviews/uploads/
@@ -92,11 +92,11 @@ Ketika Webshell sudah berhasil di akses oleh penyerang, maka penyerang dapat men
 
 Disini Setelah Webshell di akses, Server mengirimkan pesan bahwa penyerang sudah memiliki akses remote atau RCE ke server. Server mengirimkan dari port 54448 ke port 8080 milik penyerang
 
-![Screenshot 9](9.png)
+![alt text](9.png)
 
 Dan jika kita follow untuk melihat lebih detail maka akan terlihat penyerang melakukan remote code execution di dalam sebuah server
 
-![Screenshot 10](10.png)
+![alt text](10.png)
 
 #### Jawaban 
 8080
@@ -106,6 +106,6 @@ Recognizing the significance of compromised data helps prioritize incident respo
 Setelah mendapatkan akses ke server, Disini penyerang mencoba untuk mengirim file /etc/passwd ke server penyerang menggunakan curl
 
 File /etc/passwd adalah file yang berisi daftar akun pengguna yang ada di sistem Linux.
-![Screenshot 11](11.png)
+![alt text](11.png)
 #### Jawaban 
 /etc/passwd
