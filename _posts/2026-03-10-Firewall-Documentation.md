@@ -1,12 +1,12 @@
 ---
 title: "Firewall Documentation"
-date: 2026-03-10 00-00-00 
+date: 2026-03-10 00:00:00 +0700
 categories: [Blue Team,Firewall]
 authors: [fachri]
-tags: [ufw]   
+tags: [UFW, Firewall, Linux Security, Iptables, Networking]
 toc: true
 comments: false
-description: Firewall Documentation
+description: Dokumentasi lengkap UFW (Uncomplicated Firewall) di Linux — pengertian, cara kerja, command dasar, logging, dan konfigurasi firewall.
 media_subpath: /content/img/firewall
 ---
 

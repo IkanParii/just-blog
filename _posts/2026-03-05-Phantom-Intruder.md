@@ -1,22 +1,18 @@
 ---
 title: "Phantom Intruder"
-date: 2026-03-05 00-00-00 
+date: 2026-03-05 00:00:00 +0700
 categories: [Blue Team,CTF,Logs,Forensic]
 authors: [fachri]
-tags: [PicoCTF,IDN Networkers]   
+tags: [PicoCTF, IDN Networkers, PCAP Analysis, Wireshark, Base64, Network Forensic]
 toc: true
 comments: false
-description: Phantom Intruder By PicoCTF
+description: Walkthrough forensic Phantom Intruder dari PicoCTF — analisis PCAP untuk mengungkap serangan dan mengekstrak flag dari traffic jaringan.
 media_subpath: /content/img/phantomintruder
 ---
-<!-- Masukkan Image Atau Vid Ke /content
-Untuk memanggil bisa ![Coba Image](/content/img/berdua.jpeg) _foto Beduaa_ 
-Full Documentasi cara menulis bisa dilihat di https://chirpy.cotes.page/posts/write-a-new-post/
--->
 
 # Phantom Intruder
 
-![alt text](1.png)
+![Screenshot 1](1.png)
 
 ## Deskripsi Soal
 
@@ -28,30 +24,30 @@ Find the PCAP file here Network Traffic PCAP file and try to get the flag.
 
 Setelah Mendownload File tersebut, Kita akan analisis menggunakan tools Wireshark
 
-![alt text](2.png)
+![Screenshot 2](2.png)
 
 Disini kita akan coba membuka salah satu packetnya
 
-![alt text](3.png)
+![Screenshot 3](3.png)
 
 Dan Yap terdapat string aneh di packetnya, Disini saya menduga bahwa ini merupakan encode base64 di karenakan ada (==) di akhir kalimat
 
 Selanjutnya kita akan coba decode kode tersebut menggunakan Online tools [CyberChef](https://gchq.github.io/CyberChef/)
 
-![alt text](4.png)
+![Screenshot 4](4.png)
 
 Dan yap, Kode tersebut merupakan kode base64 dan kita mendapatkan potongan flagnya
 
 Untuk mempercepat pengerjaan kita akan menggunakan command strings di Linux agar mengekstrak kalimat yang bisa di baca user dari file PCAP
 
-![alt text](5.png)
+![Screenshot 5](5.png)
 
 Selanjutnya kita bisa decode semua strings tersebut yang berakhiran (==) 
 
-![alt text](6.png)
+![Screenshot 6](6.png)
 _Sebelum Di decode_
 
-![alt text](7.png)
+![Screenshot 7](7.png)
 _Sesudah di decode_
 
 Selanjutnya kita akan Menyusun kalimat tersebut supaya menjadi flag yang utuh 

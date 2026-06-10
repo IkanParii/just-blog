@@ -1,18 +1,14 @@
 ---
 title: "Introduction To Digital Forensic : Lab 01"
-date: 2026-03-18 00-00-00 
+date: 2026-03-18 00:00:00 +0700
 categories: [Blue Team, Logs, Forensic, Linux Command]
 authors: [fachri]
-tags: [IDN Networkers]
+tags: [IDN Networkers, Linux Command, Digital Forensic, File Recovery]
 toc: true
 comments: false
-description: Introduction To Digital Forensic Lab 01
+description: Walkthrough lab Digital Forensic — command dasar Linux untuk forensic: find, grep, strings, md5sum, sha1sum, file, netstat, dan hexedit.
 media_subpath: /content/img/ITDF01
 ---
-<!-- Masukkan Image Atau Vid Ke /content
-Untuk memanggil bisa ![Coba Image](/content/img/berdua.jpeg) _foto Beduaa_ 
-Full Documentasi cara menulis bisa dilihat di https://chirpy.cotes.page/posts/write-a-new-post/
--->
 
 # Introduction To Digital Forensic : Lab 01
 
@@ -49,7 +45,7 @@ Untuk menampilkan list file yang berekstensi txt di direktori yang sedang di gun
 find . -type f -name "*.txt"
 ```
 
-![alt text](1.png)
+![Screenshot 1](1.png)
 
 ### Penjelasan :
 
@@ -70,7 +66,7 @@ untuk membaca sebuah file, kita bisa menggunakan command Cat pada linux
 cat /etc/passwd
 ```
 
-![alt text](2.png)
+![Screenshot 2](2.png)
 
 ### Penjelasan :
 
@@ -123,7 +119,7 @@ Q4. What would be the commands to calculate MD5 and SHA1 hashes of the file /etc
 md5sum /etc/passwd
 ```
 
-![alt text](3.png)_MD5Hash_
+![Screenshot 3](3.png)_MD5Hash_
 
 Menghasilkan nilai hash MD5 dari file /etc/passwd
 
@@ -133,7 +129,7 @@ Menghasilkan nilai hash MD5 dari file /etc/passwd
 sha1sum /etc/passwd
 ```
 
-![alt text](4.png)_SHA1Hash_
+![Screenshot 4](4.png)_SHA1Hash_
 
 Menghasilkan nilai hash SHA1 dari file /etc/passwd
 
@@ -145,7 +141,7 @@ Hal Ini bertujuan untuk memastikan apakah file sistem berubah dengan cara memban
 
 Q5. Use the `file` command to determine the type of the file `/usr/bin/cat` and explain the output in 2-3 sentences.
 
-![alt text](5.png)
+![Screenshot 5](5.png)
 
 ### Jawaban
 
@@ -166,7 +162,7 @@ Untuk menambilkan Teks yang panjangnya lebih dari 8 karakter kita bisa menggunak
 ```bash
 strings -n 8 /bin/bash
 ```
-![alt text](6.png)
+![Screenshot 6](6.png)
 ### Penjelasan :
 
 - `strings` → mengambil karakter printable dari file biner
@@ -197,7 +193,7 @@ Hint: Explore how you can use find command to achieve this.
 
 Untuk File yang di modifikasi di 30 menit terakhir, kita bisa menggunakan command find di tambah dengan command `-mmin`
 
-![alt text](7.png)
+![Screenshot 7](7.png)
 
 ```bash
 find /home -type f -mmin -30
@@ -215,7 +211,7 @@ Q9. What command can we use to display information about all active TCP connecti
 
 ### Jawaban
 
-![alt text](8.png)
+![Screenshot 8](8.png)
 
 ```
 netstat -tna
@@ -240,21 +236,21 @@ Hint 2: Explore how hexedit can help you here.
 
 Kita Download terlebih dahulu File yang akan kita kerjakan
 
-![alt text](9.png)
+![Screenshot 9](9.png)
 
 Setelah kita download, Hal yang pertama kali kita lakukan adalah mengecek metadata dari file tersebut menggunakan tools exiftools
 
-![alt text](10.png)
+![Screenshot 10](10.png)
 
 Dari hasil exiftool, Dapat kita ketahui bahwa File Format tersebut Error, Sehingga kita harus analisis lebih lanjut
 
 Disini Saya menggunakan XXD untuk menampilkan nilai hex dari gambar, Dan Terdapat kesalahan pada header
 
-![alt text](11.png)
+![Screenshot 11](11.png)
 
 Sebagai Referensi Saya menggunakan Web https://filesig.search.org/ Untuk mencari nilai Hex di setiap Header pada Format tertentu
 
-![alt text](12.png)
+![Screenshot 12](12.png)
 
 Dapat di lihat bahwa Header pada file PNG harus berawal dari Hex
 
@@ -266,12 +262,12 @@ Sedangkan pada File Challenge.png Bukan berawalan dari hex tersebut
 
 Selanjutnya kita menggunakan Tools Hexedit untuk mengubah Nilai Hex pada gambar
 
-![alt text](13.png)
+![Screenshot 13](13.png)
 
-![alt text](14.png)
+![Screenshot 14](14.png)
 
 Kita Ubah header sesuai dengan code Hex Formatnya, Dan jika sudah kita bisa membuka file tersebut menggunakan Command Display and Yap Flag di dapatkan
 
-![alt text](15.png)
+![Screenshot 15](15.png)
 
-![alt text](16.png)
+![Screenshot 16](16.png)
