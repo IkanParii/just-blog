@@ -43,7 +43,6 @@ APT::Periodic::Unattended-Upgrade "1";
 EOF
 ```
 
-![Update](1-update.png) _Update system package_
 
 ---
 
@@ -133,7 +132,6 @@ Status: active
 [ 4] 22022/tcp                 LIMIT IN    Anywhere
 ```
 
-![UFW](2-ufw.png) _UFW active dengan aturan_
 
 ---
 
@@ -181,7 +179,6 @@ Cek status:
 fail2ban-client status sshd
 ```
 
-![Fail2Ban](3-fail2ban.png) _Fail2Ban aktif ngeban IP brute force_
 
 ---
 
