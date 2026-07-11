@@ -1,45 +1,38 @@
 ---
-title: "Introduction To Digital Forensic : Lab 01"
+title: "10 Command Linux Dasar buat Investigasi Digital Forensic"
 date: 2026-03-18 00:00:00 +0700
-categories: [Blue Team, Logs, Forensic, Linux Command]
+categories: [Blue Team, Forensik, Linux, Lab]
 authors: [fachri]
-tags: [IDN Networkers, Linux Command, Digital Forensic, File Recovery]
+tags: [IDN Networkers, Linux Command, Digital Forensic, File Recovery, Forensik Digital, CLI Tools, Incident Response]
 toc: true
 comments: false
-description: "Walkthrough lab Digital Forensic — command dasar Linux untuk forensic: find, grep, strings, md5sum, sha1sum, file, netstat, dan hexedit."
+description: "Walkthrough lab Digital Forensic: 10 command Linux dasar untuk forensic termasuk find, grep, strings, md5sum, file, netstat, dan hexedit. Teknik file recovery."
 media_subpath: /content/img/ITDF01
 ---
 
-# Introduction To Digital Forensic : Lab 01
+# Digital Forensic Lab: 10 Command Linux Dasar untuk Investigasi
 
-Challenge Ini berasal dari Repository
+Forensic digital itu soal detail. Satu file yang salah extension, satu string yang nyempil di binary, satu hash yang gak cocok. Semua itu bisa jadi bukti kalo lo tau cara liatnya. Dan tools paling dasar buat semua itu? **Command line Linux.**
 
-```
-https://github.com/vonderchild/digital-forensics-lab/tree/main/Lab%2001
-```
-
-Pada Github Tersebut menjelaskan mengenai Command Command dasar yang umum digunakan di Digital Forensic, Sebelum kita membahas commandnya.
+Lab ini dari [digital-forensics-lab](https://github.com/vonderchild/digital-forensics-lab/tree/main/Lab%2001) ngajarin 10 command fundamental yang harus lo kuasai sebelum nyentuh tools forensic canggih. Mungkin kedengerannya basic, tapi percaya deh, investigator senior pun balik ke command ini tiap hari.
 
 ## Apa Itu Digital Forensik?
 
-__Digital Forensic__ adalah proses penggunaan teknologi untuk mengumpulkan bukti, menyelidiki bukti tersebut, dan menyajikan temuan dalam kasus hukum. Proses ini dapat mencakup pemeriksaan aktivitas jaringan, catatan akses, riwayat pencarian, dan media penyimpanan digital seperti hard disk dan perangkat seluler, serta analisis data tersebut untuk mengidentifikasi bukti kegiatan kriminal atau pelanggaran lainnya.
+Digital forensic adalah proses ngumpulin, nyimpen, dan menganalisis bukti digital buat kebutuhan investigasi. Bisa buat kasus kriminal, serangan siber, pelanggaran kebijakan, atau incident response.
 
-Di Kasus yang berbeda, Digital Forensic dapat digunakan untuk :
-
+Di kasus yang berbeda, digital forensic bisa dipake buat:
 1. Penyelidikan serangan siber
 2. Deteksi dan respons ancaman
-3. Pemulihan data
-4. Penyelidikan kriminal
+3. Pemulihan data yang terhapus atau rusak
+4. Penyelidikan kriminal (pembuktian di pengadilan)
 
-## Bagian Pertanyaan
+---
 
-### Soal 1
+## Soal 1: Find .txt Files
 
-Q1. If we wanted to list all the `.txt` files in the current directory, what command would we want to use?
+**Soal:** If we wanted to list all the `.txt` files in the current directory, what command would we use?
 
-### Jawaban
-
-Untuk menampilkan list file yang berekstensi txt di direktori yang sedang di gunakan, kita bisa menggunakan Command berikut :
+**Jawaban:**
 
 ```bash
 find . -type f -name "*.txt"
@@ -47,20 +40,22 @@ find . -type f -name "*.txt"
 
 ![alt text](1.png)
 
-### Penjelasan :
+**Penjelasan:**
 
-- `find` → program untuk mencari file secara rekursif (menyusuri semua folder)
-- `.` → mulai pencarian dari direktori sekarang
-- `-type f` → hanya tampilkan file biasa, bukan folder
-- `-name "*.txt"` → nama file harus berakhiran .txt
+- `find`: program buat nyari file secara rekursif
+- `.`: mulai dari direktori sekarang
+- `-type f`: cuma file biasa, bukan folder
+- `-name "*.txt"`: nama file harus berakhiran .txt
 
-### Soal 2
+Gunakan wildcard `*` biar cocok dengan nama file apapun yang diakhiri .txt.
 
-Q2. What command can we use to read the contents of the file `/etc/passwd?`
+---
 
-### Jawaban
+## Soal 2: Read File Content
 
-untuk membaca sebuah file, kita bisa menggunakan command Cat pada linux
+**Soal:** What command can we use to read the contents of the file `/etc/passwd`?
+
+**Jawaban:**
 
 ```bash
 cat /etc/passwd
@@ -68,206 +63,234 @@ cat /etc/passwd
 
 ![alt text](2.png)
 
-### Penjelasan :
+**Penjelasan:**
 
-- `cat` → membaca dan menampilkan isi file ke layar
-- `/etc/passwd` → file sistem yang menyimpan informasi identitas user
+`cat` (concatenate) nampilin isi file ke terminal. `/etc/passwd` nyimpen informasi user di Linux.
 
-> File /etc/passwd adalah file yang berisi daftar akun pengguna yang ada di sistem Linux.
+Format tiap baris:
 
 ```
-Setiap baris mewakili satu user, dengan format:
-
 username:x:UID:GID:deskripsi:/home/user:/bin/bash
-
-Artinya:
-username → nama akun
-UID → ID user (0 = root)
-GID → grup utama
-home directory → folder home user
-shell → shell default saat login
 ```
 
-### Soal 3
+| Field | Arti |
+|-------|------|
+| username | Nama akun |
+| x | Password tersimpan di /etc/shadow |
+| UID | User ID (0 = root) |
+| GID | Group ID utama |
+| deskripsi | Informasi tambahan (opsional) |
+| /home/user | Home directory |
+| /bin/bash | Shell default |
 
-Q3. If we wanted to search for the string Error in all files in the /var/log directory, what would our command be?
+---
 
-### Jawaban
+## Soal 3: Grep Error Logs
 
-Untuk mencari kata atau kalimat di dalam sebuah File kita bisa menggunakan command grep ( Global Regular Expression Print )
+**Soal:** If we wanted to search for the string "Error" in all files in the `/var/log` directory, what would our command be?
+
+**Jawaban:**
 
 ```bash
 grep -ri "Error" /var/log
 ```
 
-### Penjelasan :
-- `grep` → program untuk mencari teks di dalam file
-- `-r` → cari secara rekursif (masuk semua subfolder)
-- `-i` → tidak peduli huruf besar/kecil
-- `"Error"` → kata yang ingin dicari
-- `/var/log` → lokasi file yang ingin di car
+**Penjelasan:**
 
-### Soal 4
+- `grep`: program buat nyari teks di dalam file
+- `-r`: rekursif (masuk semua subfolder)
+- `-i`: case insensitive, gak peduli huruf besar-kecil
+- `"Error"`: string yang dicari
+- `/var/log`: direktori target
 
-Q4. What would be the commands to calculate MD5 and SHA1 hashes of the file /etc/passwd?
+Grep adalah tools paling vital di forensic. Mau nyari IP attacker, string mencurigakan, atau pola tertentu di ribuan baris log? Grep jawabannya.
 
-### Jawaban
+---
 
-- Untuk MD5 Bisa menggunakan Command
+## Soal 4: MD5 dan SHA1 Hash
+
+**Soal:** What would be the commands to calculate MD5 and SHA1 hashes of the file `/etc/passwd`?
+
+**Jawaban:**
 
 ```bash
 md5sum /etc/passwd
-```
-
-![alt text](3.png)_MD5Hash_
-
-Menghasilkan nilai hash MD5 dari file /etc/passwd
-
-- Untuk SHA1 Bisa menggunakan Command
-
-```bash
 sha1sum /etc/passwd
 ```
 
-![alt text](4.png)_SHA1Hash_
+![alt text](3.png)
+![alt text](4.png)
 
-Menghasilkan nilai hash SHA1 dari file /etc/passwd
+**Penjelasan:**
 
-### Penjelasan :
+Hash digunakan buat verifikasi integritas file. Kalo hash file berubah, berarti file sudah dimodifikasi. Ini penting di forensic buat ngecek apakah file sistem sudah diubah sama attacker.
 
-Hal Ini bertujuan untuk memastikan apakah file sistem berubah dengan cara membandingkan sidik jari digital (hash) dari file tersebut.
+| Jenis Hash | Panjang | Kegunaan |
+|------------|--------|----------|
+| MD5 | 128 bit (32 karakter hex) | Cek cepat, tapi rawan collision |
+| SHA1 | 160 bit (40 karakter hex) | Lebih aman dari MD5 |
 
-### Soal 5
+---
 
-Q5. Use the `file` command to determine the type of the file `/usr/bin/cat` and explain the output in 2-3 sentences.
+## Soal 5: File Type Detection
 
-![alt text](5.png)
+**Soal:** Use the `file` command to determine the type of the file `/usr/bin/cat` and explain the output.
 
-### Jawaban
+**Jawaban:**
 
 ```bash
 file /usr/bin/cat
 ```
 
-File `/usr/bin/cat` adalah program biner Linux berformat __ELF 64-bit__ untuk arsitektur x86-64 Status PIE executable dan dynamically linked berarti program tidak berdiri sendiri dan saling berhubungan serta membutuhkan library sistem saat dijalankan melalui loader `/lib64/ld-linux-x86-64.so.2`
+![alt text](5.png)
 
-### Soal 6
+File `/usr/bin/cat` adalah **ELF 64-bit LSB pie executable** untuk arsitektur x86-64. Status PIE (Position Independent Executable) dan dynamically linked, artinya program ini butuh library sistem external yang di-load lewat `/lib64/ld-linux-x86-64.so.2`.
 
-Q6. What command can we use to display all printable strings of length ≥ 8 in the file `/bin/bash`?
+Command `file` berguna buat ngecek apakah extension file cocok sama isi sebenarnya. Salah satu teknik dasar forensic.
 
-### Jawaban
+---
 
-Untuk menambilkan Teks yang panjangnya lebih dari 8 karakter kita bisa menggunakan command strings
+## Soal 6: Strings Extraction
+
+**Soal:** What command can we use to display all printable strings of length >= 8 in the file `/bin/bash`?
+
+**Jawaban:**
 
 ```bash
 strings -n 8 /bin/bash
 ```
+
 ![alt text](6.png)
-### Penjelasan :
 
-- `strings` → mengambil karakter printable dari file biner
-- `-n 8` → hanya tampilkan string ≥ 8 karakter
-- `/bin/bash` → program yang di tampilkan
+**Penjelasan:**
 
-### Soal 7
+- `strings`: extract karakter printable dari file biner
+- `-n 8`: minimal panjang string 8 karakter
+- `/bin/bash`: target file
 
-Q7. Given the following output of the `file` command, can you determine what’s wrong with this file?
+Strings berguna buat cari IP address, URL, atau command yang nyempil di file biner atau memory dump.
+
+---
+
+## Soal 7: Corrupted File Detection
+
+**Soal:** Given the following output of the `file` command, can you determine what's wrong with this file?
 
 ```
 $ file image.jpg
 image.jpg: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=3ab23bf566f9a955769e5096dd98093eca750431, for GNU/Linux 3.2.0, not stripped
 ```
-### Jawaban
 
-Jika kita lihat, Extension file tersebut merupakan extension gambar, Namun ketika menggunakan command file hasilnya file tersebut merupakan ELF 64-bit LSB pie executable, yang dimana file ini adalah file binary executable di program linux, jadi seseorang mencoba menyamarkan file executable menjadi file gambar. Hal ini sangat berbahaya apabila di salah gunakan dikarenakan adanya potensi penyebaran malware ataupun hal lainnya
+**Jawaban:**
 
-### Soal 8
+Ekstensi file `.jpg` (gambar), tapi hasil `file` nunjukin ini **ELF 64-bit executable**. Artinya seseorang nyamar-in file executable jadi gambar. Ini teknik umum buat nyebulin malware: ganti extension, kasih icon mirip gambar, dan korban bakal klik.
 
-Q8. If we wanted to look for files modified in the last 30 minutes in /home directory, what command would we want to use?
+> Di dunia forensic, jangan pernah percaya extension. Selalu cek pake `file` command atau magic bytes.
 
-```
-Hint: Explore how you can use find command to achieve this.
-```
+---
 
-### Jawaban
+## Soal 8: Find Modified Files
 
-Untuk File yang di modifikasi di 30 menit terakhir, kita bisa menggunakan command find di tambah dengan command `-mmin`
+**Soal:** If we wanted to look for files modified in the last 30 minutes in `/home` directory, what command would we want to use?
 
-![alt text](7.png)
+**Jawaban:**
 
 ```bash
 find /home -type f -mmin -30
 ```
 
-### Penjelasan :
-- `find` → perintah untuk mencari file atau direktori berdasarkan kriteria tertentu
-- `/home` → direktori awal tempat pencarian dimulai (termasuk semua subdirektorinya)
-- `-type f` → membatasi hasil hanya pada file biasa (regular file)
-- `-mmin -30` → menampilkan file yang terakhir dimodifikasi kurang dari 30 menit yang lalu
+![alt text](7.png)
 
-### Soal 9
+**Penjelasan:**
 
-Q9. What command can we use to display information about all active TCP connections on the system?
+- `-mmin -30`: file yang dimodifikasi kurang dari 30 menit yang lalu
 
-### Jawaban
+Ini berguna pas incident response: lo bisa cari file yang baru berubah selama atau setelah serangan. Attacker biasanya ngunduh atau ngubah file dalam jendela waktu tertentu.
+
+---
+
+## Soal 9: Active TCP Connections
+
+**Soal:** What command can we use to display information about all active TCP connections on the system?
+
+**Jawaban:**
+
+```bash
+netstat -tna
+```
 
 ![alt text](8.png)
 
-```
-netstat -tna
-```
-### Penjelasan :
+**Penjelasan:**
 
-- `netstat` → menampilkan informasi koneksi jaringan pada sistem
-- `-t` → hanya menampilkan koneksi TCP
-- `-n` → alamat IP dan port ditampilkan dalam bentuk angka
-- `-a` → menampilkan semua koneksi: yang aktif
+- `netstat`: nampilin koneksi jaringan
+- `-t`: cuma TCP
+- `-n`: nomor IP dan port (tanpa DNS lookup)
+- `-a`: semua koneksi (listening dan established)
 
-### Soal 10
+Buat yang lebih modern, lo bisa pake `ss -tna` (dari package iproute2). Fungsinya sama, tapi `ss` lebih cepat.
 
-Q10. Given this corrupted image file, can you find a way to recover and view its contents?
+Pas incident response, command ini lo jalanin pertama kali buat liat apakah ada koneksi mencurigakan ke IP asing.
 
-```
-Hint 1: A quick google search for "magic bytes" might help.
-Hint 2: Explore how hexedit can help you here.
-```
+---
 
-### Jawaban
+## Soal 10: File Recovery dengan Hexedit
 
-Kita Download terlebih dahulu File yang akan kita kerjakan
+**Soal:** Given this corrupted image file, can you find a way to recover and view its contents?
+
+**Hint:** A quick google search for "magic bytes" might help.
+**Hint:** Explore how hexedit can help you here.
+
+**Jawaban:**
+
+Download file challenge:
 
 ![alt text](9.png)
 
-Setelah kita download, Hal yang pertama kali kita lakukan adalah mengecek metadata dari file tersebut menggunakan tools exiftools
+Cek metadata pake exiftool:
 
 ![alt text](10.png)
 
-Dari hasil exiftool, Dapat kita ketahui bahwa File Format tersebut Error, Sehingga kita harus analisis lebih lanjut
+File format error. Berarti ada yang salah sama headernya.
 
-Disini Saya menggunakan XXD untuk menampilkan nilai hex dari gambar, Dan Terdapat kesalahan pada header
+Cek pake `xxd` buat nampilin hex dump:
 
 ![alt text](11.png)
 
-Sebagai Referensi Saya menggunakan Web https://filesig.search.org/ Untuk mencari nilai Hex di setiap Header pada Format tertentu
+Header file gak sesuai sama format yang seharusnya. Referensi magic bytes dari [filesig.search.org](https://filesig.search.org/):
 
 ![alt text](12.png)
 
-Dapat di lihat bahwa Header pada file PNG harus berawal dari Hex
+PNG header harusnya:
 
 ```
 89 50 4E 47 0D 0A 1A 0A
 ```
 
-Sedangkan pada File Challenge.png Bukan berawalan dari hex tersebut
-
-Selanjutnya kita menggunakan Tools Hexedit untuk mengubah Nilai Hex pada gambar
+Tapi file ini pake header yang salah. Fix pake `hexedit`:
 
 ![alt text](13.png)
-
 ![alt text](14.png)
 
-Kita Ubah header sesuai dengan code Hex Formatnya, Dan jika sudah kita bisa membuka file tersebut menggunakan Command Display and Yap Flag di dapatkan
+Ubah header sesuai magic bytes PNG, simpan, buka:
 
 ![alt text](15.png)
-
 ![alt text](16.png)
+
+Flag dapet.
+
+---
+
+## Kesimpulan
+
+10 command ini mungkin keliatan basic, tapi ini fondasi yang lo pake setiap hari di dunia forensic. Dari cari file, baca konten, hash, sampe recover file rusak. Tools mahal dan software fancy gak bakal nolong kalo lo gak ngerti dasar-dasarnya.
+
+Yang paling penting: **jangan percaya sama extension.** Attacker bisa ngasih nama `image.jpg` tapi isinya ELF binary. Selalu verifikasi pake command kayak `file` dan `xxd`.
+
+### Takeaway Teknis
+
+1. **Find + Grep** adalah senjata utama buat nyari bukti di ribuan file. Kuasai opsi rekursif dan filter.
+2. **Hash verification (md5sum/sha1sum)** buat ngecek integritas file. Catet hash file sistem pas awal, bandingin kalo ada insiden.
+3. **Strings command** bisa extract IP, domain, atau command dari file biner. Berguna buat malware analysis.
+4. **file command** ngecek tipe file sebenarnya berdasarkan magic bytes, bukan extension.
+5. **Hexedit** ngebantu lo recovery file yang rusak atau sengaja dirusak attacker dengan cara ngebenerin header.

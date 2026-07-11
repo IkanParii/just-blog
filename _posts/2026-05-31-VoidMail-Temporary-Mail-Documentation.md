@@ -1,54 +1,51 @@
 ---
-title: "VoidMail Cloudflare: Bikin Temporary Mail Sendiri Tanpa Repot"
-description: Temporary Mail pake Cloudflare Worker, D1, dan Email Routing
+title: "Bikin Temporary Mail Sendiri di Cloudflare Edge Pake Workers dan D1"
+description: "Build temporary mail service sendiri pake Cloudflare Workers, D1, dan Email Routing. Full guide termasuk MIME parser, setup, dan deployment."
 date: 2026-05-31 00:00:00 +0700
-categories: [Web Development, Cloudflare]
-tags: [cloudflare workers, cloudflare d1, email routing, temporary mail, privacy, cybersecurity]
+categories: [Web Development, Cloudflare, DevOps]
+tags: [Cloudflare Workers, Cloudflare D1, Email Routing, Temporary Mail, Privacy, Cybersecurity, Serverless, Edge Computing]
+toc: true
+comments: false
 ---
 
-# VoidMail
+# Temporary Mail di Edge: VoidMail - Cloudflare Workers & D1 Guide
 
 ![VoidMail](https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=2070&auto=format&fit=crop)
 
-Pernah daftar ke website terus inbox lo kebanjiran spam? Atau lebih parah: email lo tiba-tiba dipake buat daftar akun mencurigakan sampe lo dapet email ancaman? Gw pernah. Abis itu gw nyari solusi dan nemu ini: temporary mail. Gak perlu registrasi, gak perlu ngasih data, dapet inbox langsung. Kalo ada yang nyurigain, tinggal buang. VoidMail adalah hasil learning gw bikin temporary mail pake Cloudflare.
+Pernah daftar ke website trus inbox lo kebanjiran spam? Atau lebih parah: email lo tiba-tiba dipake buat daftar akun mencurigakan sampe lo dapet email ancaman? Gw pernah. Abis itu gw nyari solusi dan nemu ide ini: **temporary mail**. Gak perlu registrasi, gak perlu ngasih data, dapet inbox langsung. Kalo ada yang nyurigain, tinggal buang.
+
+VoidMail adalah hasil learning gw bikin temporary mail pake **Cloudflare stack**. Yang bikin keren: semua jalan di edge network Cloudflare. No VPS, no server berat, gak perlu bayar server sendiri. Cuma modal domain + akun Cloudflare free tier.
 
 ## VoidMail Itu Apa?
 
-VoidMail adalah aplikasi temporary mail. Lo bisa dapet alamat email random tanpa registrasi, tanpa nyerahin inbox asli.
-
-Buat cybersecurity enthusiasts, ini tools berguna pas daftar ke service yang mencurigakan. Darah lo pake email asli trus kena spam flood atau phishing, mending pake temporary mailbox yang auto-expired.
+VoidMail adalah aplikasi temporary mail. Lo dapet alamat email random tanpa registrasi, tanpa nyerahin inbox asli. Cocok buat cybersecurity enthusiasts yang sering daftar ke service mencurigakan. Daripada lo pake email asli trus kena spam flood atau phishing, mending pake temporary mailbox yang auto-expired.
 
 ### Filosofi
 
-Banyak layanan online minta email lo cuma buat verifikasi doang. Tapi setelah itu? Spam, promo, kadang dibocorin ke data broker. VoidMail solusinya: **kasih alamat sementara, terima email yang lo perlukan, sisanya? ilang otomatis 90 hari kemudian**.
+Banyak layanan online minta email lo cuma buat verifikasi doang. Tapi setelah itu? Spam, promo, kadang dibocorin ke data broker. VoidMail solusinya: **kasih alamat sementara, terima email yang lo perlukan, sisanya ilang otomatis 90 hari kemudian**.
 
 ### Yang Bisa Dilakukan VoidMail:
-
 1. Buat mailbox random, tanpa registrasi, tanpa ngisi form
 2. Terima email dari domain sendiri
 3. Liat pesan masuk di web inbox
 4. Hapus inbox kalo udah gak dipake
 5. Lindungi email asli dari spam, phishing, data broker
 
-**Yang bikin keren**: semua jalan 100% di Cloudflare edge. No VPS, no server berat, no framework ribet.
-
 ---
 
 ## Tech Stack
 
 | Teknologi | Fungsinya |
-|---|---|
-| Cloudflare Worker | Backend, API, email handler, sama SSR UI. Satu file doang |
+|-----------|-----------|
+| Cloudflare Worker | Backend, API, email handler, SSR UI. Satu file doang |
 | Cloudflare D1 | Database SQLite edge, nyimpen pesan |
-| Cloudflare Email Routing | Nerima email masuk terus diterusin ke Worker |
+| Cloudflare Email Routing | Nerima email masuk trus diterusin ke Worker |
 | HTML + Tailwind CDN | Tampilan depan |
 | Vanilla JavaScript | Logika frontend, tanpa framework |
 
----
-
 ## Cara Kerja VoidMail
 
-Alurnya gampang:
+Alurnya:
 
 1. Lo buka website VoidMail
 2. Lo generate mailbox random (bisa juga ketik manual)
@@ -57,18 +54,19 @@ Alurnya gampang:
 5. **Cloudflare Email Routing** nerima email (catch-all)
 6. Email Routing terusin pesan ke **Worker**
 7. **Worker** baca alamat tujuan, sender, subject, body email
-8. Worker parsing MIME, urusan multipart, quoted-printable, base64
+8. Worker parsing MIME: urusan multipart, quoted-printable, base64
 9. Worker simpen data ke **D1** database
 10. Frontend polling API inbox tiap 15 detik
 11. Pesan muncul di halaman mailbox
 
-Diagrams:
+Diagram:
+
 ```
 Sender Email
     ↓
 Cloudflare Email Routing (catch-all)
     ↓
-Worker — email() handler
+Worker - email() handler
     ↓
 MIME Parser (multipart / QP / base64)
     ↓
@@ -109,8 +107,6 @@ Worker pake nama: `void-mai`
 Database D1 binding: `DB`
 Domain email: `mail.devsec.my.id`
 
-Contoh config di `wrangler.jsonc`:
-
 ```json
 {
   "name": "void-mai",
@@ -134,7 +130,7 @@ Contoh config di `wrangler.jsonc`:
 
 ## Schema Database
 
-Cuma satu tabel doang, namanya `messages`:
+Cuma satu tabel: `messages`
 
 ```sql
 CREATE TABLE IF NOT EXISTS messages (
@@ -151,45 +147,32 @@ CREATE TABLE IF NOT EXISTS messages (
 
 `body_format` bisa `"html"` atau `"text"`. Ini nentuin cara nampilin body di frontend.
 
-Index yang dipake:
+Index:
 
 ```sql
 CREATE INDEX IF NOT EXISTS messages_mailbox_idx ON messages (mailbox);
 CREATE INDEX IF NOT EXISTS messages_expires_idx ON messages (expires_at);
 ```
 
-- `mailbox_idx`: biar query inbox cepet
-- `expires_idx`: biar cleanup pesan expired gak lambat
+- `mailbox_idx`: query inbox cepet
+- `expires_idx`: cleanup pesan expired
 
-**TTL**: 90 hari (`90 * 24 * 60 * 60` detik). Otomatis cleanup.
-
+**TTL**: 90 hari, auto cleanup.
 **Batas**: 100 pesan per mailbox. Kalo lebih, pesan tertua auto-dihapus.
 
 ---
 
 ## Jalanin Project Lokal
 
-Install dulu:
-
 ```bash
 npm install
-```
-
-Apply migration D1 lokal:
-
-```bash
 npx wrangler d1 migrations apply void-mails --local
-```
-
-Jalanin Worker:
-
-```bash
 npm run dev
 ```
 
-Buka `http://127.0.0.1:8787` di browser.
+Buka `http://127.0.0.1:8787`.
 
-Buat testing email masuk lokal, pake dev seed:
+Buat testing email lokal:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/api/dev/inbox/testmailbox \
@@ -197,44 +180,35 @@ curl -X POST http://127.0.0.1:8787/api/dev/inbox/testmailbox \
   -d '{"sender":"test@example.com","subject":"Hello","body":"Test message"}'
 ```
 
-Endpoint ini cuma aktif di `localhost` atau kalo `ENABLE_DEV_SEED=true`.
-
 ---
 
 ## Deploy ke Cloudflare
 
-Apply migration dulu:
-
 ```bash
 npx wrangler d1 migrations apply void-mails --remote
-```
-
-Deploy:
-
-```bash
 npm run deploy
 ```
 
 ---
 
-## Setup Email Routing (**Bagian Paling Krusial**)
+## Setup Email Routing (Bagian Paling Krusial)
 
 Ini yang paling sering bikin VoidMail gak jalan. Kalo Email Routing cuma nerima alamat tertentu, mailbox random lo bakal bounce.
 
 **Catch-all wajib diaktifin.**
 
-Langkahnya:
+Langkah:
 1. Login Cloudflare Dashboard
 2. Pilih domain `devsec.my.id`
-3. Masuk ke **Email → Email Routing**
+3. Masuk ke **Email > Email Routing**
 4. Aktifin Email Routing
-5. Pastiin MX record udah mengarah ke Cloudflare
+5. Pastiin MX record udah ngarah ke Cloudflare
 6. Buat **Catch-all address**
 7. Action: **Send to Worker**
 8. Pilih Worker `void-mai`
 9. Save
 
-Kalo catch-all gak aktif, yang terjadi:
+Kalo catch-all gak aktif:
 
 ```
 550 5.1.1 Address does not exist
@@ -252,10 +226,7 @@ Jebol. Email gak bakal sampe.
 GET /health
 ```
 
-Response:
-```json
-{ "ok": true }
-```
+Response: `{ "ok": true }`
 
 ### Liat Inbox
 
@@ -264,6 +235,7 @@ GET /api/inbox/{mailbox}
 ```
 
 Response:
+
 ```json
 {
   "mailbox": "abc123",
@@ -290,29 +262,10 @@ Response:
 GET /api/message/{id}
 ```
 
-Balikin satu pesan lengkap: subject, sender, body, bodyFormat.
-
 ### Hapus Inbox
 
 ```http
 DELETE /api/inbox/{mailbox}
-```
-
-Hapus semua pesan di mailbox tertentu.
-
-### Dev Seed (lokal)
-
-```http
-POST /api/dev/inbox/{mailbox}
-```
-
-Body:
-```json
-{
-  "sender": "test@example.com",
-  "subject": "Test",
-  "body": "Hello world"
-}
 ```
 
 ---
@@ -328,10 +281,10 @@ async email(message, env, ctx) {
 ```
 
 Yang dibaca:
-1. Alamat tujuan dari header `To` atau `message.to`
-2. Pengirim dari header `From` atau `message.from`
+1. Alamat tujuan dari header `To`
+2. Pengirim dari header `From`
 3. Subject dari header `Subject`
-4. Body email dari `message.raw` sebagai `ReadableStream`
+4. Body email dari `message.raw` sebagai ReadableStream
 
 ### Parsing MIME, Yang Bikin Sakit Kepala
 
@@ -340,18 +293,16 @@ Email modern pake format MIME multipart. VoidMail punya parser sendiri (`parseMi
 1. Baca semua deklarasi `boundary=` dari header email
 2. Pisahin MIME part berdasarkan boundary
 3. Pilih part `text/html` (prioritas) atau `text/plain` (fallback)
-4. Decode body sesuai `Content-Transfer-Encoding`:
-   - `quoted-printable`: decode karakter kayak `=20`, `=3D`, soft line break `=\n`
+4. Decode body sesuai Content-Transfer-Encoding:
+   - `quoted-printable`: decode karakter kayak `=20`, `=3D`, soft line break
    - `base64`: decode via `atob()`
    - `7bit` / `8bit`: langsung lewat
-5. Simpen `bodyFormat: "html"` atau `"text"` ke database
-
-Deteksi HTML juga kenalin `<!DOCTYPE html>`, bukan cari `<html>` doang.
+5. Simpen `bodyFormat` ke database
 
 ### Tampilan Body di Frontend
 
 | bodyFormat | Cara nampilin |
-|---|---|
+|------------|---------------|
 | `"html"` | Di-render dalam `<iframe sandbox>`, aman gak ada script jalan |
 | `"text"` | Ditampilin dalam `<pre>` pake `.textContent`, XSS gak mempan |
 
@@ -359,7 +310,7 @@ Deteksi HTML juga kenalin `<!DOCTYPE html>`, bukan cari `<html>` doang.
 
 ## UI & Layout
 
-VoidMail pake layout full-viewport, jadi gak ada page scroll:
+Layout full-viewport, gak ada page scroll:
 
 ```
 ┌─ Header (fixed) ────────────────────────────────────┐
@@ -377,32 +328,13 @@ VoidMail pake layout full-viewport, jadi gak ada page scroll:
 Detail:
 - `html` dan `body` pake `height: 100%; overflow: hidden`
 - Sidebar kiri dan panel kanan scroll sendiri-sendiri
-- Header punya tombol **"← New mailbox"** pas di mailbox view
+- Header punya tombol "New mailbox" pas di mailbox view
 - Klik logo VoidMail di header balik ke home
 
 ### Home Page
-
-Ada:
 1. **Hero**: headline + deskripsi privasi
 2. **Form mailbox**: input ID, preview alamat, tombol Generate + Open
 3. **Feature cards**: Instan, Anti-tracking, Auto-hapus
-
-### Inbox List
-
-Tiap item nampilin:
-- Nama pengirim (display name diekstrak dari `"Name <email>"`)
-- Waktu terima
-- Subject (dipotong kalo panjang)
-
-Body preview gak ditampilin di list, cuma pas di-klik.
-
-### Message Viewer
-
-Pas lo klik pesan:
-- Subject jadi heading utama
-- Metadata (From, Received, Expires) dalam blok compact
-- Body di-render sesuai bodyFormat
-- Tab title browser berubah ke subject pesan
 
 ---
 
@@ -417,16 +349,9 @@ Penyebab paling umum:
 4. Worker yang dipilih bukan `void-mai`
 5. Email dikirim ke domain yang salah
 
-Kalo muncul bounce:
-```
-550 5.1.1 Address does not exist
-```
-
-**Penyebab + solusi**: Catch-all belum aktif. Aktifin di Cloudflare Dashboard.
-
 ### Body Tampil Raw HTML atau Karakter `=20` `=3D`
 
-MIME parser gagal detect part yang bener. Pastiin Worker versi terbaru yang punya `parseMimeParts()`. Versi lama pake regex tunggal, jadi gak handle multipart boundary dengan bener.
+MIME parser gagal detect part yang bener. Pastiin Worker versi terbaru yang punya `parseMimeParts()`. Versi lama pake regex tunggal, jadi gak handle multipart boundary.
 
 ### Inbox Error 500
 
@@ -436,19 +361,16 @@ Kemungkinan:
 3. Kolom `body_format` belum ada
 
 Solusi:
+
 ```bash
 npx wrangler d1 migrations apply void-mails --remote
 ```
 
-### Email Bounce
-
-Kalo bounce sebelum sampe Worker → masalah Email Routing / MX record.
-Kalo udah sampe Worker tapi gak muncul → cek API inbox + D1.
-
 ---
 
-## Kelebihan VoidMail
+## Kelebihan & Kekurangan
 
+### Kelebihan
 1. **No VPS**, 100% Cloudflare edge, gak perlu bayar server
 2. **Satu file doang**, UI, API, email handler semua di `index.ts`
 3. **MIME parser custom**, handle multipart, quoted-printable, base64
@@ -459,8 +381,7 @@ Kalo udah sampe Worker tapi gak muncul → cek API inbox + D1.
 8. **Full-viewport**, UX mulus, gak ada double scroll
 9. **No tracking**, gak perlu daftar, gak ada cookie jejak
 
-## Kekurangan VoidMail
-
+### Kekurangan
 1. Belum ada attachment viewer
 2. Belum ada HTML sanitizer custom, masih ngandelin sandbox iframe
 3. **No auth**, siapa pun yang tau mailbox ID bisa baca isinya
@@ -469,15 +390,14 @@ Kalo udah sampe Worker tapi gak muncul → cek API inbox + D1.
 
 ## Kesimpulan
 
-VoidMail adalah temporary mail yang jalan di Cloudflare edge stack. Cocok buat tools cybersecurity sederhana, lindungi identitas digital tanpa perlu VPS.
+VoidMail adalah temporary mail yang jalan di Cloudflare edge stack. Semua proses dari nerima email, parsing MIME, nyimpen ke database, sampe nampilin ke frontend terjadi di edge worker. Tanpa VPS. Tanpa server backend sendiri. Modal domain dan akun Cloudflare.
 
-**Yang paling penting di project ini:**
-- **Email Routing catch-all**: tanpa ini, mailbox random gak akan pernah sampe ke Worker
-- **MIME parser**: tanpa ini, body email bakal kacau
+Yang paling penting di project ini: **Email Routing catch-all** dan **MIME parser**. Kalo dua hal itu udah bener, sisanya tinggal jalan. Kalo error, cek lagi catch-all sama MIME parsingnya.
 
-Alurnya:
-```
-Random mailbox → Email Routing → Worker → MIME Parser → D1 → Inbox UI
-```
+### Takeaway Teknis
 
-Kalo dua hal di atas udah bener, sisanya tinggal jalan. Kalo error, cek lagi catch-all sama MIME parsingnya.
+1. **Cloudflare Workers bisa handle full stack** termasuk email processing. Worker bisa nerima email dari Email Routing, parse, dan simpen ke D1.
+2. **MIME parsing adalah bagian tersulit** dari email handling. Format multipart, quoted-printable, dan beragam encoding harus dihandle dengan bener.
+3. **D1 (SQLite di edge)** cukup buat aplikasi skala kecil. Gak perlu setup database server sendiri.
+4. **Catch-all Email Routing** adalah kunci utama. Tanpa ini, alamat email random gak bakal sampe ke worker.
+5. **Serverless architecture** mengurangi biaya operasional. VoidMail jalan di free tier Cloudflare, cuma bayar domain doang per tahun.

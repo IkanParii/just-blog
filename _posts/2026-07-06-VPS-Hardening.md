@@ -1,22 +1,22 @@
 ---
-title: "VPS Murah Hardening Guide: Langkah Pertama Abis Beli VPS"
+title: "Hardening VPS 2GB RAM biar Aman dari Bot dan Script Kiddie"
 date: 2026-07-06 00-00-00 
-categories: [SysAdmin, Hardening, Linux]
+categories: [SysAdmin, Hardening, Linux, Blue Team]
 authors: [fachri]
-tags: [VPS, Security, Hardening, Linux, UFW, Fail2Ban]
+tags: [VPS, Security, Hardening, Linux, UFW, Fail2Ban, SSH Security, SysAdmin, Server Hardening]
 toc: true
 comments: false
-description: Hardening VPS 2GB RAM / 2 CPU / 40GB Disk biar aman dari script kiddie
+description: "Panduan hardening VPS 2GB RAM / 2 CPU dari awal: SSH hardening, UFW firewall, Fail2Ban, sysctl tuning, AIDE, dan performance tuning untuk server production."
 media_subpath: /content/img/vps-hardening
 ---
 
-# VPS Murah Hardening Guide
+# Hardening VPS 2GB RAM: Langkah Bertahan dari Script Kiddie
 
 ![Hardening](https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1934&auto=format&fit=crop)
 
-Abis VPS nyala, lo langsung SSH sebagai root. Pertanyaan pertama: apa yang harus gw lakuin sekarang? Banyak yang jawab "install panel" atau "setup web server". Jawaban yang bener: hardening. Ini urutan langkah yang gw lakuin tiap kali beli VPS baru. Tinggal salin.
+Beli VPS baru, langsung SSH sebagai root. Pertanyaan pertama: "Apa yang harus gw lakuin sekarang?" Banyak jawab "install panel" atau "setup web server". Padahal prioritas nomor satu: **hardening**. Soalnya, VPS baru itu kayak rumah baru tanpa kunci. Attacker pake bot yang scan internet 24/7 buat cari SSH di port 22. Lo connect 5 menit aja udah bisa kena brute force.
 
-Ini langkah-langkah hardening yang gw lakuin. Tinggal salin langsung di VPS.
+Ini urutan langkah hardening yang gw lakuin tiap kali beli VPS. Tinggal salin, tapi baca dulu tiap bagian biar lo paham apa yang terjadi.
 
 > Butuh akses root atau sudo buat jalanin perintah di bawah.
 
@@ -24,7 +24,7 @@ Ini langkah-langkah hardening yang gw lakuin. Tinggal salin langsung di VPS.
 
 ## 1. Update System & Auto Update
 
-Update dulu semua package:
+Update dulu semua package. Lo gak mau server baru tapi pake package lawas yang ada vuln publik:
 
 ```bash
 apt update && apt upgrade -y
@@ -32,7 +32,7 @@ apt install unattended-upgrades -y
 dpkg-reconfigure --priority=low unattended-upgrades
 ```
 
-Biar gak perlu manual tiap kali ada patch security:
+Biar update jalan otomatis:
 
 ```bash
 cat > /etc/apt/apt.conf.d/20auto-upgrades << 'EOF'
@@ -43,16 +43,15 @@ APT::Periodic::Unattended-Upgrade "1";
 EOF
 ```
 
-
 ---
 
 ## 2. SSH Hardening
 
-Ini yang paling vital. Jangan biarin SSH di port 22 dengan root login aktif. Auto kena brute force.
+Ini bagian paling kritikal. Jangan biarin SSH di port 22 pake root login. Bot dan script kiddie bakal terus nyoba.
 
 ### 2.1 Ganti Port SSH (Wajib)
 
-Pilih port antara 1024-65535. Jangan pake 2222 atau 8080. Bot juga scan itu.
+Pilih port antara 1024-65535. Jangan pake 2222 atau 8080, bot juga scan itu.
 
 ```bash
 NEW_SSH_PORT=22022
@@ -62,7 +61,7 @@ sed -i "s/#Port 22/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config
 
 ### 2.2 Disable Root Login & Password Auth (Wajib)
 
-Sebelum jalanin ini, pastiin lo punya user non-root dengan SSH key. Kalo belum:
+Sebelum jalanin ini, pastiin lo udah punya user non-root dengan SSH key. Kalo belum:
 
 ```bash
 adduser zane
@@ -74,7 +73,7 @@ chmod 700 /home/zane/.ssh
 chmod 600 /home/zane/.ssh/authorized_keys
 ```
 
-Baru disable root login sama password auth:
+Baru disable root login dan password auth:
 
 ```bash
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
@@ -121,6 +120,7 @@ ufw status numbered
 ```
 
 Output yang bener:
+
 ```
 Status: active
 
@@ -131,7 +131,6 @@ Status: active
 [ 3] 443/tcp                   ALLOW IN    Anywhere
 [ 4] 22022/tcp                 LIMIT IN    Anywhere
 ```
-
 
 ---
 
@@ -175,10 +174,10 @@ fail2ban-client status
 ```
 
 Cek status:
+
 ```bash
 fail2ban-client status sshd
 ```
-
 
 ---
 
@@ -215,7 +214,7 @@ sysctl -p /etc/sysctl.d/99-hardening.conf
 
 ---
 
-## 6. Matikan Service Gak Kepake
+## 6. Matiin Service Gak Kepake
 
 VPS murah, resource terbatas. Matiin yang gak perlu.
 
@@ -237,6 +236,7 @@ ss -tulpn
 ```
 
 Output ideal:
+
 ```
 State    Recv-Q   Send-Q     Local Address:Port     Peer Address:Port   Process
 LISTEN   0        128              0.0.0.0:22022          0.0.0.0:*       users:(("sshd",...))
@@ -260,6 +260,7 @@ EOF
 ```
 
 Kalo pengen liat langsung:
+
 ```bash
 logwatch --detail high
 ```
@@ -279,6 +280,7 @@ echo "0 5 * * * root /usr/bin/aide --check > /var/log/aide-check.log" > /etc/cro
 ```
 
 Kalo abis install package baru, update database:
+
 ```bash
 aide --update
 mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
@@ -405,13 +407,21 @@ sudo ./harden.sh
 - [ ] AIDE database udah dibikin
 - [ ] Koneksi SSH di port baru jalan lancar
 
----
+## Kesimpulan
 
-## Penutup
+VPS murah bukan berarti lo bisa abaikan security. Langkah-langkah di atas bikin attacker males duluan buat nyentuh server lo. Bot yang nge-scan port 22 langsung dapet respon "connection refused" atau "connection timeout". Script kiddie yang nyoba brute force bakal kena ban sama Fail2Ban.
 
-VPS murah bukan berarti gak usah diamankan. Langkah di atas ngebuat attacker males duluan nyentuh VPS lo. Gak ada yang 100% aman, tapi lo udah bikin mereka cari target lain.
+Gak ada sistem yang 100% aman, tapi lo udah bikin barrier yang cukup tinggi. Attacker bakal milih target yang lebih gampang daripada harus lawan UFW + Fail2Ban + SSH key-only + port acak.
 
-**Inget**: Keamanan itu proses, bukan sekali jalan. Cek log, update rutin, evaluasi apa yang jalan di VPS lo.
+### Takeaway Teknis
+
+1. **SSH hardening adalah prioritas #1.** Ganti port, disable root login, key-only auth. Tanpa ini, server lo jadi target empuk bot brute force.
+2. **Firewall berlapis:** UFW buat aturan dasar, Fail2Ban buat dynamic blocking. Kombinasi ini nge-cover serangan dari berbagai arah.
+3. **Kernel hardening via sysctl** ngurangin attack surface di layer jaringan. Redirect, source routing, dan martian logging wajib diatur.
+4. **Resource management** (swap, service minimal) penting buat VPS 2GB. Setiap MB berharga.
+5. **Monitoring dan integrity check** (LogWatch + AIDE) ngasih visibilitas kalo ada yang aneh. Lo bakal tau kalo ada file system yang berubah tanpa izin.
+
+Inget: keamanan itu proses, bukan sekali jalan. Cek log, update rutin, evaluasi apa yang jalan di VPS lo.
 
 Referensi:
 - [CIS Benchmarks](https://www.cisecurity.org/cis-benchmarks)

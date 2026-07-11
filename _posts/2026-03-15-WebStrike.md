@@ -1,111 +1,151 @@
 ---
-title: "WebStrike"
+title: "Webshell dan RCE Lewat PCAP Serangan Web Bareng CyberDefenders"
 date: 2026-03-15 00:00:00 +0700
-categories: [Blue Team, CTF, Logs, Forensic]
+categories: [Blue Team, CTF, Forensik, Web Security]
 authors: [fachri]
-tags: [CyberDefenders, IDN Networkers, Web Shell, PCAP Analysis, Wireshark, RCE]
+tags: [CyberDefenders, IDN Networkers, Web Shell, PCAP Analysis, Wireshark, RCE, Web Security, Incident Response]
 toc: true
 comments: false
-description: Walkthrough forensic WebStrike dari CyberDefenders — analisis PCAP serangan web shell upload, RCE, dan eksfiltrasi data via curl.
+description: "Walkthrough forensic WebStrike CyberDefenders: analisis PCAP serangan web shell upload, RCE, dan eksfiltrasi data via curl. Teknik network forensic."
 media_subpath: /content/img/webstrike
 ---
 
-# Webstrike
+# Webshell & RCE: Analisis PCAP Serangan Web dari CyberDefenders
 
 ![alt text](1.png)
+
+Salah satu serangan web yang paling umum tapi bahaya: **file upload vulnerability**. Attacker upload file PHP yang disamarin jadi gambar, dapet akses ke server, dan tinggal jalanin perintah remote. Di challenge CyberDefenders WebStrike ini, lo bakal investigasi PCAP dari serangan yang exactly kayak gitu.
+
+Dari file PCAP, lo bisa track seluruh lifecycle serangan: dari mana attacker berasal, gimana cara dia upload webshell, sampe data apa yang dicuri.
 
 ## Deskripsi Soal
 
 A suspicious file was identified on a company web server, raising alarms within the intranet. The Development team flagged the anomaly, suspecting potential malicious activity. To address the issue, the network team captured critical network traffic and prepared a PCAP file for review.
+
 Your task is to analyze the provided PCAP file to uncover how the file appeared and determine the extent of any unauthorized activity.
 
-### Soal 1
+## Tahap Pengerjaan
 
-Identifying the geographical origin of the attack facilitates the implementation of geo-blocking measures and the analysis of threat intelligence. From which city did the attack originate?
+### Soal 1: Lokasi Geografis Attacker
 
-#### Penjelasan
+**Soal:** Identifying the geographical origin of the attack facilitates the implementation of geo-blocking measures and the analysis of threat intelligence. From which city did the attack originate?
 
-Setelah saya buka file PCAP nya disini terdapat IP yang mencoba untuk saling berkomunikasi Three Ways Handshake, IP yang pertama kali Request Syn adalah 117.11.88.124, Untuk mencari IP Geolocation kita bisa menggunakan beberapa website seperti https://ipgeolocation.io/ 
+**Penjelasan:**
 
-![alt text](2.png) _Network Logs_
+Buka PCAP dan cari komunikasi pertama. IP yang initiate TCP handshake pertama adalah `117.11.88.124`. Ini IP attacker.
 
-![alt text](3.png) _IP Geolocation_
+![alt text](2.png)
 
-#### Jawaban 
+Cek geolocation IP pake [ipgeolocation.io](https://ipgeolocation.io/):
 
-Tianjin
+![alt text](3.png)
 
-### Soal 2
+Attacker berasal dari **Tianjin**, China. Informasi ini berguna buat geo-blocking atau setidaknya jadi indikator buat monitoring.
 
-Knowing the attacker's User-Agent assists in creating robust filtering rules. What's the attacker's Full User-Agent?
+**Jawaban:** `Tianjin`
 
-#### Penjelasan
+### Soal 2: User-Agent Attacker
 
-Untuk mengetahui User Agent dari perangkat kita harus membuka packet yang berprotokol HTTP atau HTTPS, User Agent sendiri adalah sebuah string teks (karakter) yang dikirimkan oleh browser atau aplikasi ke server web dalam setiap permintaan HTTP, Fungsinya untuk mengidentifikasi perangkat lunak, versi browser dan sistem operasi pengguna
+**Soal:** Knowing the attacker's User-Agent assists in creating robust filtering rules. What's the attacker's Full User-Agent?
 
-Untuk itu kita bisa pilih packet yang berprotokol http di wireshark
+**Penjelasan:**
+
+Cari packet HTTP di Wireshark untuk liat User-Agent. Filter pake `http` atau langsung follow HTTP stream.
+
 ![alt text](4.png)
 
-Selanjutnya kita bisa follow packet tersebut untuk melihat komunikasinya lebih detail
 ![alt text](5.png)
-#### Jawaban 
 
+User-Agent:
+
+```
 Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0
+```
 
-### Soal 3
+Ini Firefox di Linux. Tapi inget, User-Agent gampang dipalsuin. Jangan terlalu percaya.
 
-We need to determine if any vulnerabilities were exploited. What is the name of the malicious web shell that was successfully uploaded?
+**Jawaban:** `Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0`
 
-#### Penjelasan
+### Soal 3: Nama Webshell
 
-Untuk mencari webshell yang berhasil terupload ke server, Kita bisa analisa Packet yang berprotokol HTTP sama seperti soal sebelumnya. Namun, untuk mempermudah mana yang berhasil, kita bisa mencari packet yang bermethod POST, Method POST digunakan untuk mengirimkan data secara tersembunyi melalui permintaan HTTP.
+**Soal:** We need to determine if any vulnerabilities were exploited. What is the name of the malicious web shell that was successfully uploaded?
 
-Di Wireshark, kita bisa memfilter packet dengan command http.request.method
+**Penjelasan:**
+
+Di case ini, webshell diupload lewat HTTP POST request. Filter pake `http.request.method == POST`:
+
 ![alt text](6.png)
 
-Jika di lihat, terdapat 2 method POST, Namun memiliki respon server yang berbeda,Dikarenakan method pertama di tolak dikarenakan berekstensi .php namun method kedua, Webshell berhasil terupload ke server dikarenakan di samarkan menggunakan extension jpg atau image
+Ada 2 POST request. Yang pertama ditolak, yang kedua berhasil.
+
+Kenapa yang pertama gagal? File yang diupload berekstensi `.php`. Server punya filter extension. Tapi percobaan kedua pake nama `Image.jpg.php`. Server cuma ngecek extension pertama (.jpg) dan lolos.
 
 ![alt text](7.png)
 
-#### Jawaban
-Image.jpg.php
+Teknik ini namanya **double extension bypass**. Masih banyak dipake sampe sekarang.
 
-### Soal 4
+**Jawaban:** `Image.jpg.php`
 
-Identifying the directory where uploaded files are stored is crucial for locating the vulnerable page and removing any malicious files. Which directory is used by the website to store the uploaded files?
+### Soal 4: Direktori Upload
 
-#### Penjelasan
+**Soal:** Identifying the directory where uploaded files are stored is crucial for locating the vulnerable page and removing any malicious files. Which directory is used by the website to store the uploaded files?
 
-Setelah Menaruh WebShell, Penyerang harus membuka webshell yang sudah terupload di server, Oleh karena itu, penyerang harus mencari direktori tempat file tersebut di upload, setelah mencari direktorinya di dapat bahwa File tersebut masuk ke direktori /reviews/uploads/image.jpg.php
+**Penjelasan:**
+
+Setelah upload berhasil, attacker harus ngakses file tersebut. Dari HTTP stream keliatan path lengkap file yang diupload:
 
 ![alt text](8.png)
 
-#### Jawaban 
-/reviews/uploads/
-### Soal 5
+Path: `/reviews/uploads/Image.jpg.php`
 
-Which port, opened on the attacker's machine, was targeted by the malicious web shell for establishing unauthorized outbound communication?
+Direktori upload: `/reviews/uploads/`
 
-#### Penjelasan
+**Jawaban:** `/reviews/uploads/`
 
-Ketika Webshell sudah berhasil di akses oleh penyerang, maka penyerang dapat mengakses server menggunakan webshell tersebut, dan alur komunikasinya dalam protocol TCP sehingga penyerang dapat mengirimkan atau mengeksekusi perintah di dalam server tersebut
+### Soal 5: Port Attacker untuk RCE
 
-Disini Setelah Webshell di akses, Server mengirimkan pesan bahwa penyerang sudah memiliki akses remote atau RCE ke server. Server mengirimkan dari port 54448 ke port 8080 milik penyerang
+**Soal:** Which port, opened on the attacker's machine, was targeted by the malicious web shell for establishing unauthorized outbound communication?
+
+**Penjelasan:**
+
+Setelah webshell terupload dan terakses, attacker punya RCE (Remote Code Execution) di server. Ini artinya server korban bisa ngirim data balik ke attacker.
+
+Dari log keliatan server korban ngirim data dari port 54448 ke port **8080** milik attacker.
 
 ![alt text](9.png)
 
-Dan jika kita follow untuk melihat lebih detail maka akan terlihat penyerang melakukan remote code execution di dalam sebuah server
+Follow TCP stream buat liat komunikasi selengkapnya:
 
 ![alt text](10.png)
 
-#### Jawaban 
-8080
-### Soal 6
-Recognizing the significance of compromised data helps prioritize incident response actions. Which file was the attacker attempting to exfiltrate?
-#### Penjelasan
-Setelah mendapatkan akses ke server, Disini penyerang mencoba untuk mengirim file /etc/passwd ke server penyerang menggunakan curl
+Command yang dijalankan: download script, baca file, dan ngirim balik hasilnya.
 
-File /etc/passwd adalah file yang berisi daftar akun pengguna yang ada di sistem Linux.
+**Jawaban:** `8080`
+
+### Soal 6: File Target Ekfiltrasi
+
+**Soal:** Recognizing the significance of compromised data helps prioritize incident response. Which file was the attacker attempting to exfiltrate?
+
+**Penjelasan:**
+
+Dari follow stream, keliatan attacker ngirim perintah buat baca `/etc/passwd` pake curl.
+
+File `/etc/passwd` nyimpen daftar user di sistem Linux. Meskipun password hash sekarang disimpen di `/etc/shadow`, file ini tetep ngasih info username yang bisa dipake buat serangan lebih lanjut.
+
 ![alt text](11.png)
-#### Jawaban 
-/etc/passwd
+
+**Jawaban:** `/etc/passwd`
+
+## Kesimpulan
+
+Serangan ini nunjukin pola klasik: upload vulnerability + webshell = server compromised. Attacker dari China masuk lewat aplikasi web yang gak validasi file upload dengan bener, upload PHP shell yang disamarin jadi .jpg, dan dapet akses penuh ke server. Dalam hitungan menit, dia udah baca file sistem dan siap exfiltrate.
+
+Yang bikin ini relevan: kasus kayak gini masih sering terjadi di production. Banyak developer masih underestimate soal file upload validation. Mereka pikir cukup cek extension doang, padahal attacker udah punya seribu cara buat bypass itu.
+
+### Takeaway Teknis
+
+1. **File upload validation harus multilayer.** Cek extension, MIME type, magic bytes, dan content. Jangan cuma ngandelin satu filter.
+2. **Double extension bypass** (`file.jpg.php`) masih berhasil di banyak server. Konfigurasi web server harus mencegah eksekusi file di folder upload.
+3. **Geo-blocking bisa jadi lapisan pertahanan tambahan.** Tapi jangan andelin doang, attacker bisa pake VPN atau proxy.
+4. **PCAP analysis bisa ngungkap seluruh serangan.** Dari IP sumber, User-Agent, file yang diupload, sampe data yang dicuri.
+5. **Cek traffic outbound yang mencurigakan.** Server korban yang tiba-tiba connect ke IP asing di port gak umum patut diwaspadai.
