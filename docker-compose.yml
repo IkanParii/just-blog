@@ -1,0 +1,7 @@
+services:
+  blog:
+    build: .
+    container_name: jekyll-blog
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1133:80"
